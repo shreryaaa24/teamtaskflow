@@ -56,7 +56,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get Project by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.id;
 
     const project = await prisma.project.findUnique({
@@ -70,7 +70,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
     // Check if user is a member
-    const isMember = project.members.some(m => m.userId === userId);
+    const isMember = project.members.some((m: { userId: string }) => m.userId === userId);
     if (!isMember) return res.status(403).json({ error: 'Forbidden' });
 
     res.json(project);
@@ -82,7 +82,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // Add member to project
 router.post('/:id/members', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { email, role } = req.body;
     const userId = req.user!.id;
 
@@ -115,7 +115,8 @@ router.post('/:id/members', async (req: AuthRequest, res: Response) => {
 // Remove member
 router.delete('/:id/members/:memberId', async (req: AuthRequest, res: Response) => {
   try {
-    const { id, memberId } = req.params;
+    const id = req.params.id as string;
+    const memberId = req.params.memberId as string;
     const userId = req.user!.id;
 
     const currentMember = await prisma.projectMember.findUnique({

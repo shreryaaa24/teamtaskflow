@@ -43,18 +43,19 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // Update Task Status (Members can do this)
 router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status } = req.body;
     const userId = req.user!.id;
 
-    const task = await prisma.task.findUnique({ where: { id }, include: { project: { include: { members: true } } } });
-    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const taskWithProject = await prisma.task.findUnique({ where: { id }, include: { project: { include: { members: true } } } });
+    if (!taskWithProject) return res.status(404).json({ error: 'Task not found' });
+    if (!taskWithProject.project) return res.status(404).json({ error: 'Project not found' });
 
-    const member = task.project.members.find(m => m.userId === userId);
+    const member = taskWithProject.project.members.find((m: { userId: string }) => m.userId === userId);
     if (!member) return res.status(403).json({ error: 'Not a member of this project' });
 
     // Members can only update their ASSIGNED tasks
-    if (member.role === 'MEMBER' && task.assignedToId !== userId) {
+    if (member.role === 'MEMBER' && taskWithProject.assignedToId !== userId) {
       return res.status(403).json({ error: 'Members can only update assigned tasks' });
     }
 
@@ -72,13 +73,14 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
 // Delete Task (Admin only)
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.id;
 
-    const task = await prisma.task.findUnique({ where: { id }, include: { project: { include: { members: true } } } });
-    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const taskWithProject = await prisma.task.findUnique({ where: { id }, include: { project: { include: { members: true } } } });
+    if (!taskWithProject) return res.status(404).json({ error: 'Task not found' });
+    if (!taskWithProject.project) return res.status(404).json({ error: 'Project not found' });
 
-    const member = task.project.members.find(m => m.userId === userId);
+    const member = taskWithProject.project.members.find((m: { userId: string }) => m.userId === userId);
     if (!member || member.role !== 'ADMIN') return res.status(403).json({ error: 'Only admins can delete tasks' });
 
     await prisma.task.delete({ where: { id } });
