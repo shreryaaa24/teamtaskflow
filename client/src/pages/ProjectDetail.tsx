@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Plus, UserPlus, Settings, Trash2, Calendar, AlertCircle } from 'lucide-react';
+import { Plus, UserPlus, Trash2, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Task {
